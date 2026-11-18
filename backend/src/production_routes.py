@@ -3,8 +3,8 @@ from sqlalchemy import select
 from .database import Session
 from .security import current,allow
 from .blending import obj,audit
-from .production_models import Dryer,DryingRun,PelletPack,BlendShipment
-from .production_schemas import DryerInput,DryingInput,DryingMeasure,PackInput,PackWeight,ShipmentInput,LoadPack,ShipmentReceipt
+from .production_models import Dryer,DryingRun,PelletPack,BlendShipment,RepackBatch
+from .production_schemas import DryerInput,DryingInput,DryingMeasure,PackInput,PackWeight,ShipmentInput,LoadPack,ShipmentReceipt,RepackInput
 from . import production_service as svc
 router=APIRouter()
 @router.get('/dryers')
@@ -33,6 +33,11 @@ def accept(id:int,u=Depends(current)):
 @router.get('/pellet-packs')
 def packs(u=Depends(current)):
     with Session()as s:return [svc.pack_view(s,x)for x in s.scalars(select(PelletPack).order_by(PelletPack.id.desc()))]
+@router.get('/pellet-checks/{id}/packing')
+def packing_by_check(id:int,u=Depends(current)):
+    with Session()as s:
+        from .quality_models import PelletCheck
+        return svc.packing_summary(s,svc.get(s,PelletCheck,id))
 @router.post('/pellet-packs')
 def pack(p:PackInput,u=Depends(current)):
     allow(u,'admin','blender')
@@ -49,6 +54,25 @@ def seal(id:int,u=Depends(current)):
 def cancel(id:int,u=Depends(current)):
     allow(u,'admin','blender')
     with Session.begin()as s:return svc.pack_action(s,id,u,'cancelled')
+@router.get('/pellet-packs/{id}/packing')
+def packing(id:int,u=Depends(current)):
+    with Session()as s:
+        from .quality_models import PelletCheck
+        x=svc.get(s,PelletPack,id)
+        return svc.packing_summary(s,svc.get(s,PelletCheck,x.check_id))
+@router.get('/pellet-packs/{id}/trace')
+def pack_trace(id:int,u=Depends(current)):
+    with Session()as s:return svc.pack_trace(s,id)
+@router.get('/repacks')
+def repacks(u=Depends(current)):
+    with Session()as s:return [svc.repack_view(s,x)for x in s.scalars(select(RepackBatch).order_by(RepackBatch.id.desc()))]
+@router.post('/repacks')
+def repack(p:RepackInput,u=Depends(current)):
+    allow(u,'admin','blender')
+    with Session.begin()as s:return svc.create_repack(s,p,u)
+@router.get('/repacks/{id}')
+def repack_detail(id:int,u=Depends(current)):
+    with Session()as s:return svc.repack_view(s,svc.get(s,RepackBatch,id))
 @router.get('/blend-shipments')
 def shipments(u=Depends(current)):
     with Session()as s:return [svc.ship_view(s,x)for x in s.scalars(select(BlendShipment).order_by(BlendShipment.id.desc()))]

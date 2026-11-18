@@ -5,5 +5,5 @@ LOT_STATES=('active','quarantine')
 PELLET_STATES=('quarantine','passed','certified')
 
 DRYING_STATES=('drying','redry','passed','accepted')
-PACK_STATES=('open','sealed','cancelled','loaded')
+PACK_STATES=('open','sealed','cancelled','loaded','repacked')
 SHIPMENT_STATES=('loading','dispatched','received')

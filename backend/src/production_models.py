@@ -44,3 +44,29 @@ class ShipmentPack(Base):
     shipment_id:Mapped[int]=mapped_column(ForeignKey('blend_shipments.id'))
     pack_id:Mapped[int]=mapped_column(ForeignKey('pellet_packs.id'),unique=True)
     pack_snapshot:Mapped[dict]=mapped_column(JSON)
+class RepackBatch(Base):
+    __tablename__='repack_batches'
+    __table_args__=(CheckConstraint('loss_kg >= 0'),CheckConstraint('source_total_kg = target_total_kg + loss_kg'),)
+    id:Mapped[int]=mapped_column(primary_key=True)
+    check_id:Mapped[int]=mapped_column(ForeignKey('pellet_checks.id'))
+    request_key:Mapped[str]=mapped_column(String(80),unique=True)
+    source_total_kg:Mapped[Decimal]=mapped_column(Numeric(12,3))
+    target_total_kg:Mapped[Decimal]=mapped_column(Numeric(12,3))
+    loss_kg:Mapped[Decimal]=mapped_column(Numeric(12,3))
+    certificate_snapshot:Mapped[dict]=mapped_column(JSON)
+    note:Mapped[str]=mapped_column(String(600),default='')
+    created_by:Mapped[str]=mapped_column(String(120))
+    created_at:Mapped[str]=mapped_column(String(40))
+class RepackSource(Base):
+    __tablename__='repack_sources'
+    id:Mapped[int]=mapped_column(primary_key=True)
+    batch_id:Mapped[int]=mapped_column(ForeignKey('repack_batches.id'))
+    pack_id:Mapped[int]=mapped_column(ForeignKey('pellet_packs.id'),unique=True)
+    kg:Mapped[Decimal]=mapped_column(Numeric(12,3))
+    pack_snapshot:Mapped[dict]=mapped_column(JSON)
+class RepackTarget(Base):
+    __tablename__='repack_targets'
+    id:Mapped[int]=mapped_column(primary_key=True)
+    batch_id:Mapped[int]=mapped_column(ForeignKey('repack_batches.id'))
+    pack_id:Mapped[int]=mapped_column(ForeignKey('pellet_packs.id'),unique=True)
+    kg:Mapped[Decimal]=mapped_column(Numeric(12,3))

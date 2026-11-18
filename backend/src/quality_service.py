@@ -23,7 +23,9 @@ def decide_lot(s,lid,data,u,target):
     reason=data.reason.strip()
     if len(reason)<8:raise HTTPException(409,'请填写至少8字的隔离或解除依据')
     lot.state=target;lot.inspection_note=reason;audit(s,u,'lot_'+target,lot.code+' / '+reason);return lot_view(s,lot)
-def pellet_view(s,x):return {**obj(x),'blend_code':s.get(Blend,x.blend_id).code}
+def pellet_view(s,x):
+    from .production_service import packing_summary
+    return {**obj(x),'blend_code':s.get(Blend,x.blend_id).code,'packing':packing_summary(s,x)}
 def measure(s,x,data,u,reason):
     if data.actual_kg>Decimal(str(x.input_snapshot['total_kg'])):raise HTTPException(409,'粒料产出不能超过已放行实际投料总重')
     x.actual_kg=data.actual_kg;x.melt_index=data.melt_index;x.pvc_ppm=data.pvc_ppm

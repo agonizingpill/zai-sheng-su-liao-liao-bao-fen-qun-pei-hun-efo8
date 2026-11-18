@@ -21,6 +21,14 @@ class ShipmentInput(Clean):
     code:str=Field(min_length=2,max_length=70)
     customer:str=Field(min_length=2,max_length=120)
 class LoadPack(Clean):pack_id:int=Field(gt=0)
+class RepackTargetInput(Clean):
+    code:str=Field(min_length=2,max_length=80)
+    kg:Decimal=Field(gt=0,le=100000,max_digits=12,decimal_places=3)
+class RepackInput(Clean):
+    source_pack_ids:list[int]=Field(min_length=1,max_length=50)
+    targets:list[RepackTargetInput]=Field(min_length=1,max_length=50)
+    request_key:str=Field(default='',max_length=60)
+    note:str=Field(default='',max_length=600)
 class ShipmentReceipt(Clean):
     received_kg:Decimal=Field(gt=0,le=100000,max_digits=12,decimal_places=3)
     received_by:str=Field(min_length=2,max_length=120)
